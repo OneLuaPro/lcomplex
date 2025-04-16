@@ -45,7 +45,6 @@ SOFTWARE.
 
 #include "lua.h"
 #include "lauxlib.h"
-//#include "mycompat.h"
 
 #ifdef _MSC_VER
 #if LUA_FLOAT_TYPE == LUA_FLOAT_FLOAT		/* { single float */
@@ -122,6 +121,32 @@ static int Pnew(lua_State *L, Double re, Double im){
   p->_Val[1] = im;
   return 1;
 }
+static int Lcmplx(lua_State *L){
+  // Extension to original lcomplex.c
+  // Mimics Fortran cmplx() function
+  double re, im;
+  // Check and act according to number of arguments
+  if (lua_gettop(L) == 0) {
+    // signature 1 - init to (0.0,0.0)
+    re = 0.0;
+    im = 0.0;
+  }
+  else if (lua_gettop(L) == 1) {
+    // signature 2 - init to (arg,0.0)
+    re = luaL_checknumber(L,1);
+    im = 0.0;
+  }
+  else if (lua_gettop(L) == 2) {
+    // signature 3 - init to (arg1,arg2)
+    re = luaL_checknumber(L,1);
+    im = luaL_checknumber(L,2);
+  }
+  else {
+    // bailing out
+    return luaL_error(L,"Wrong number of arguments.");
+  }
+  return Pnew(L, re, im);
+}
 #else
 static int Pnew(lua_State *L, Complex z)
 {
@@ -130,7 +155,7 @@ static int Pnew(lua_State *L, Complex z)
  *p=z;
  return 1;
 }
-#endif	// _MSC_VER
+#endif
 
 static int Leq(lua_State *L)			/** __eq(z,w) */
 {
@@ -255,6 +280,7 @@ static const luaL_Reg R[] =
 	{ "tan",	Ltan	},
 	{ "tanh",	Ltanh	},
 	{ "tostring",	Ltostring},
+	{ "cmplx",	Lcmplx  },
 	{ NULL,		NULL	}
 };
 
@@ -281,6 +307,10 @@ LUALIB_API int luaopen_lcomplex(lua_State *L)
  lua_settable(L,-3);
  lua_pushliteral(L,"__tostring");		/** __tostring(z) */
  lua_pushliteral(L,"tostring");
+ lua_gettable(L,-3);
+ lua_settable(L,-3);
+ lua_pushliteral(L,"__cmplx");			/** __cmplx(re,im) */
+ lua_pushliteral(L,"cmplx");
  lua_gettable(L,-3);
  lua_settable(L,-3);
  return 1;
