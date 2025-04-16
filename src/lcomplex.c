@@ -128,13 +128,13 @@ static int Lcmplx(lua_State *L){
   // Check and act according to number of arguments
   if (lua_gettop(L) == 0) {
     // signature 1 - init to (0.0,0.0)
-    re = 0.0;
-    im = 0.0;
+    re = ZERO;
+    im = ZERO;
   }
   else if (lua_gettop(L) == 1) {
     // signature 2 - init to (arg,0.0)
     re = luaL_checknumber(L,1);
-    im = 0.0;
+    im = ZERO;
   }
   else if (lua_gettop(L) == 2) {
     // signature 3 - init to (arg1,arg2)
