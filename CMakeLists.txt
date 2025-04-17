@@ -107,4 +107,5 @@ install(TARGETS lcomplex RUNTIME DESTINATION ${INSTALL_TOP_CDIR})
 
 # ------------------------------------------------------------------------------
 # Install docs
-# install(DIRECTORY doc/ DESTINATION ${INSTALL_DOCDIR})	# "/" omits leading dir
+install(DIRECTORY doc/ DESTINATION ${INSTALL_DOCDIR})	# "/" omits leading dir
+install(FILES test/test-lcomplex.lua DESTINATION ${INSTALL_DOCDIR})
