@@ -1,42 +1,42 @@
 /*
---------------------------------------------------------------------------------
-MIT License
+  --------------------------------------------------------------------------------
+  MIT License
 
-lcomplex - Copyright (c) 2018 Luiz Henrique de Figueiredo.
-                     (c) 2025 Kritzel Kratzel.
+  lcomplex - Copyright (c) 2018 Luiz Henrique de Figueiredo.
+                       (c) 2025 Kritzel Kratzel for OneLuaPro.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy of
+  this software and associated documentation files (the "Software"), to deal in 
+  the Software without restriction, including without limitation the rights to 
+  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+  the Software, and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
-copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+  --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
+  Original Copyright Notice
+  -------------------------
+  lcomplex.c
+  C99 complex numbers for Lua 5.3
+  Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br>
+  26 Jul 2018 17:57:06
+  This code is hereby placed in the public domain and also under the MIT license
 
-* Original Copyright Notice
-* -------------------------
-* lcomplex.c
-* C99 complex numbers for Lua 5.3
-* Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br>
-* 26 Jul 2018 17:57:06
-* This code is hereby placed in the public domain and also under the MIT license
+  --------------------------------------------------------------------------------
+  https://github.com/microsoft/STL/issues/3280
+  https://github.com/OpenMathLib/OpenBLAS/issues/4073
+  https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support
 */
-
-// https://github.com/microsoft/STL/issues/3280
-// https://github.com/OpenMathLib/OpenBLAS/issues/4073
-// https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support
 
 #ifdef _MSC_VER
 #define _CRT_USE_C_COMPLEX_H
@@ -68,10 +68,10 @@ SOFTWARE.
 #else
 #error "numeric float type not defined"
 #endif
-#define Double		LUA_NUMBER		// see luaconf.h
-#else	// _MSC_VER
+#define Double		LUA_NUMBER
+#else
 #define Complex		LUA_NUMBER complex
-#endif	// _MSC_VER
+#endif
 #define MYNAME		"complex"
 #define MYTYPE		MYNAME " number"
 #define MYVERSION	"l" MYNAME " 1.0"
@@ -101,16 +101,22 @@ SOFTWARE.
 #endif
 #define cconj		l_mathop(conj)
 
-static Complex Pget(lua_State *L, int i)
-{
- switch (lua_type(L,i))
- {
+static Complex Pget(lua_State *L, int i){
+  switch (lua_type(L,i)){
   case LUA_TNUMBER:
+#ifdef _MSC_VER
+    Complex cnum;
+    cnum._Val[0] = luaL_checknumber(L,i);
+    cnum._Val[1] = ZERO;
+    return cnum;
+#else
+    return luaL_checknumber(L,i);
+#endif
   case LUA_TSTRING:
-    // return luaL_checknumber(L,i); // FIXME
+    luaL_error(L,"Argument cannot be a string.");
   default:
-   return *((Complex*)luaL_checkudata(L,i,MYTYPE));
- }
+    return *((Complex*)luaL_checkudata(L,i,MYTYPE));
+  }
 }
 
 #ifdef _MSC_VER
@@ -121,10 +127,11 @@ static int Pnew(lua_State *L, Double re, Double im){
   p->_Val[1] = im;
   return 1;
 }
+
 static int Lcmplx(lua_State *L){
   // Extension to original lcomplex.c
   // Mimics Fortran cmplx() function
-  double re, im;
+  Double re, im;
   // Check and act according to number of arguments
   if (lua_gettop(L) == 0) {
     // signature 1 - init to (0.0,0.0)
@@ -148,17 +155,15 @@ static int Lcmplx(lua_State *L){
   return Pnew(L, re, im);
 }
 #else
-static int Pnew(lua_State *L, Complex z)
-{
- Complex *p=lua_newuserdata(L,sizeof(Complex));
- luaL_setmetatable(L,MYTYPE);
- *p=z;
- return 1;
+static int Pnew(lua_State *L, Complex z){
+  Complex *p=lua_newuserdata(L,sizeof(Complex));
+  luaL_setmetatable(L,MYTYPE);
+  *p=z;
+  return 1;
 }
 #endif
 
-static int Leq(lua_State *L)			/** __eq(z,w) */
-{
+static int Leq(lua_State *L){			/** __eq(z,w) */
 #ifdef _MSC_VER
   lua_pushboolean(L,l_mathop(creal)(Z(1))==l_mathop(creal)(Z(2)) &&
 		  l_mathop(cimag)(Z(1))==l_mathop(cimag)(Z(2)));
@@ -168,30 +173,26 @@ static int Leq(lua_State *L)			/** __eq(z,w) */
   return 1;
 }
 
-static int Ltostring(lua_State *L)		/** tostring(z) */
-{
- Complex z=Z(1);
- LUA_NUMBER x = l_mathop(creal)(z);
- LUA_NUMBER y = l_mathop(cimag)(z);
- lua_settop(L,0);
- if (x!=0 || y==0) lua_pushnumber(L,x);
- if (y!=0)
- {
-  if (y==1)
-  {
-   if (x!=0) lua_pushliteral(L,"+");
+static int Ltostring(lua_State *L){		/** tostring(z) */
+  Complex z=Z(1);
+  LUA_NUMBER x = l_mathop(creal)(z);
+  LUA_NUMBER y = l_mathop(cimag)(z);
+  lua_settop(L,0);
+  if (x!=0 || y==0) lua_pushnumber(L,x);
+  if (y!=0){
+    if (y==1){
+      if (x!=0) lua_pushliteral(L,"+");
+    }
+    else if (y==-1)
+      lua_pushliteral(L,"-");
+    else{
+      if (y>0 && x!=0) lua_pushliteral(L,"+");
+      lua_pushnumber(L,y);
+    }
+    lua_pushliteral(L,"i");
   }
-  else if (y==-1)
-   lua_pushliteral(L,"-");
-  else
-  {
-   if (y>0 && x!=0) lua_pushliteral(L,"+");
-   lua_pushnumber(L,y);
-  }
-  lua_pushliteral(L,"i");
- }
- lua_concat(L,lua_gettop(L));
- return 1;
+  lua_concat(L,lua_gettop(L));
+  return 1;
 }
 
 #ifdef _MSC_VER
@@ -248,70 +249,68 @@ F(sqrt)			/** sqrt(z) */
 F(tan)			/** tan(z) */
 F(tanh)			/** tanh(z) */
 
-static const luaL_Reg R[] =
-{
-	{ "__add",	Ladd	},
-	{ "__div",	Ldiv	},
-	{ "__eq",	Leq	},
-	{ "__mul",	Lmul	},
-	{ "__sub",	Lsub	},
-	{ "__unm",	Lneg	},
-	{ "abs",	Labs	},
-	{ "acos",	Lacos	},
-	{ "acosh",	Lacosh	},
-	{ "arg",	Larg	},
-	{ "asin",	Lasin	},
-	{ "asinh",	Lasinh	},
-	{ "atan",	Latan	},
-	{ "atanh",	Latanh	},
-	{ "conj",	Lconj	},
-	{ "cos",	Lcos	},
-	{ "cosh",	Lcosh	},
-	{ "exp",	Lexp	},
-	{ "imag",	Limag	},
-	{ "log",	Llog	},
-	{ "new",	Lnew	},
-	{ "pow",	Lpow	},
-	{ "proj",	Lproj	},
-	{ "real",	Lreal	},
-	{ "sin",	Lsin	},
-	{ "sinh",	Lsinh	},
-	{ "sqrt",	Lsqrt	},
-	{ "tan",	Ltan	},
-	{ "tanh",	Ltanh	},
-	{ "tostring",	Ltostring},
-	{ "cmplx",	Lcmplx  },
-	{ NULL,		NULL	}
+static const luaL_Reg R[] = {
+  { "__add",	Ladd	},
+  { "__div",	Ldiv	},
+  { "__eq",	Leq	},
+  { "__mul",	Lmul	},
+  { "__sub",	Lsub	},
+  { "__unm",	Lneg	},
+  { "abs",	Labs	},
+  { "acos",	Lacos	},
+  { "acosh",	Lacosh	},
+  { "arg",	Larg	},
+  { "asin",	Lasin	},
+  { "asinh",	Lasinh	},
+  { "atan",	Latan	},
+  { "atanh",	Latanh	},
+  { "conj",	Lconj	},
+  { "cos",	Lcos	},
+  { "cosh",	Lcosh	},
+  { "exp",	Lexp	},
+  { "imag",	Limag	},
+  { "log",	Llog	},
+  { "new",	Lnew	},
+  { "pow",	Lpow	},
+  { "proj",	Lproj	},
+  { "real",	Lreal	},
+  { "sin",	Lsin	},
+  { "sinh",	Lsinh	},
+  { "sqrt",	Lsqrt	},
+  { "tan",	Ltan	},
+  { "tanh",	Ltanh	},
+  { "tostring",	Ltostring},
+  { "cmplx",	Lcmplx  },
+  { NULL,	NULL	}
 };
 
-LUALIB_API int luaopen_lcomplex(lua_State *L)
-{
- luaL_newmetatable(L,MYTYPE);
- luaL_setfuncs(L,R,0);
- lua_pushliteral(L,"_VERSION");			/** version */
- lua_pushliteral(L,MYVERSION);
- lua_settable(L,-3);
- lua_pushliteral(L,"__index");
- lua_pushvalue(L,-2);
- lua_settable(L,-3);
- lua_pushliteral(L,"I");			/** I */
+LUALIB_API int luaopen_lcomplex(lua_State *L){
+  luaL_newmetatable(L,MYTYPE);
+  luaL_setfuncs(L,R,0);
+  lua_pushliteral(L,"_VERSION");			/** version */
+  lua_pushliteral(L,MYVERSION);
+  lua_settable(L,-3);
+  lua_pushliteral(L,"__index");
+  lua_pushvalue(L,-2);
+  lua_settable(L,-3);
+  lua_pushliteral(L,"I");			/** I */
 #ifdef _MSC_VER
- Pnew(L,ZERO,ONE);
+  Pnew(L,ZERO,ONE);
 #else
- Pnew(L,I);
+  Pnew(L,I);
 #endif
- lua_settable(L,-3);
- lua_pushliteral(L,"__pow");			/** __pow(z,w) */
- lua_pushliteral(L,"pow");
- lua_gettable(L,-3);
- lua_settable(L,-3);
- lua_pushliteral(L,"__tostring");		/** __tostring(z) */
- lua_pushliteral(L,"tostring");
- lua_gettable(L,-3);
- lua_settable(L,-3);
- lua_pushliteral(L,"__cmplx");			/** __cmplx(re,im) */
- lua_pushliteral(L,"cmplx");
- lua_gettable(L,-3);
- lua_settable(L,-3);
- return 1;
+  lua_settable(L,-3);
+  lua_pushliteral(L,"__pow");			/** __pow(z,w) */
+  lua_pushliteral(L,"pow");
+  lua_gettable(L,-3);
+  lua_settable(L,-3);
+  lua_pushliteral(L,"__tostring");		/** __tostring(z) */
+  lua_pushliteral(L,"tostring");
+  lua_gettable(L,-3);
+  lua_settable(L,-3);
+  lua_pushliteral(L,"__cmplx");			/** __cmplx(re,im) */
+  lua_pushliteral(L,"cmplx");
+  lua_gettable(L,-3);
+  lua_settable(L,-3);
+  return 1;
 }
