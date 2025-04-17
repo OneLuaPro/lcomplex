@@ -3,7 +3,7 @@
 MIT License
 
 lcomplex - Copyright (c) 2018 Luiz Henrique de Figueiredo.
-                     (c) 2024-2025 Kritzel Kratzel.
+                     (c) 2025 Kritzel Kratzel.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in 

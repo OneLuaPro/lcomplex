@@ -30,24 +30,39 @@ assert(type(z2) == "userdata")
 print("z2 = "..tostring(z1))
 print("Done\n")
 
-print("Testing addition z1+z2 = 8+10i...")
+print("Testing complex addition z1+z2 = 8+10i ...")
 print("z1+z2 = "..tostring(z1+z2))
 assert(real(z1+z2) == 8.0 and imag(z1+z2) == 10.0)
 print("Done\n")
 
-print("Testing subtraction z1-z2 = -2-2i...")
+print("Testing complex subtraction z1-z2 = -2-2i ...")
 print("z1-z2 = "..tostring(z1-z2))
 assert(real(z1-z2) == -2.0 and imag(z1-z2) == -2.0)
 print("Done\n")
 
-print("Testing multiplication z1*z2 = -9+38i...")
+print("Testing complex multiplication z1*z2 = -9+38i ...")
 print("z1*z2 = "..tostring(z1*z2))
 assert(real(z1*z2) == -9.0 and imag(z1*z2) == 38.0)
 print("Done\n")
 
-print("Testing division z1/z2 = 39/61+i*2/61...")
+print("Testing complex division z1/z2 = 39/61+i*2/61 ...")
 print("z1/z2 = "..tostring(z1/z2))
 assert(real(z1/z2) == 39/61 and imag(z1/z2) == 2/61)
 print("Done\n")
 
+print("Testing complex exponentiation i^i = e^(-pi/2) ...")
+-- https://www.wolframalpha.com/input/?i=i%5Ei
+print("i^i = "..tostring(i^i))
+assert((i^i) == cmplx(math.exp(-math.pi/2)))
+print("Done\n")
+
+print("Testing complex negation -z1 = -3-4i ...")
+print("-z1 = "..tostring(-z1))
+assert(real(-z1) == -3.0 and imag(-z1) == -4.0)
+print("Done\n")
+
+print("Testing complex abs function abs(3+4i) = 5 ...")
+print("abs(3+4i) = "..tostring(c.abs(z1)))
+assert(c.abs(z1) == 5.0)
+print("Done\n")
 
